@@ -1,0 +1,481 @@
+Мои Заметки по теме 
+
+Использовал контейнеризацию 
+
+docker-compose ps
+
+docker -v
+Docker version 26.1.2, build 211e74b
+
+docker-compose -v
+Docker Compose version v2.12.2
+
+Файлы настроек, конфигурации (Dockerfile, docker-compose.yml)  описания laravel10-migrations-seeders.txt, 
+ссылка на видео - первоисточник есть на гите
+
+Laravel v10.48.11 (PHP v8.2.19)
+
+ lsb_release -a
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 22.04.4 LTS
+Release:	22.04
+Codename:	jammy
+
+
+=========================================================================================================
+	Видео первоисточник канал - Grapes, за что огромное спасибо!
+	Laravel migrations, seeders, factories. Исчерпывающее руководство
+	https://www.youtube.com/watch?v=zhHmqyf1eFY&list=PLze7bMjv1CYuFDzbuKwSqo9ZfdiScyYX7&index=7
+	
+=========================================================================================================
+
+	
+===================================================================
+===================================================================
+cd projects/laravel10-migrations-seeders/
+cd projects/laravel10-migrations-seeders/laravel10/
+============ laravel10-migrations-seeders ================================
+
+структура папок и файлов
+
+├── laravel10-migrations-seeders (работа с контейнером [docker-compose up -d] и гитом [git add .] )
+│   (~/projects/laravel10-migrations-seeders$ )
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── (вспомогательные файлы, Readme, ...)
+......
+│   └── laravel10 (в этом каталоге работа с проектом [php artisan ... ])
+│       (~/projects/laravel10-migrations-seeders/laravel10$ )
+│       └── (файлы проекта)
+
+
+1.
+mkdir laravel10-migrations-seeders
+
+2.
+cd laravel10/
+
+3.
+composer create-project laravel/laravel:^10 laravel10
+
+4. Работа с git hub и docker-compose в папке laravel10-migrations-seeders$
+	~/projects/laravel10-migrations-seeders$
+cd laravel10/
+
+5. Работа с проектом в папке /laravel10$
+	~/projects/laravel10-migrations-seeders/laravel10$ 
+php artisan serve
+
+   INFO  Server running on [http://127.0.0.1:8000].  
+
+  Press Ctrl+C to stop the server
+
+  2024-05-10 11:57:08 ....................................... ~ 0s
+6. 
+	выход
+Ctrl+C
+
+7. Хост нужен для миграций и тд, иначе выдаст ошибку, что не нашло базу данных
+
+	Вводим в терминале команду hostname получаем свой хост (у меня это E7240) 
+/laravel10$ hostname
+E7240
+    
+    1) варианты для миграции в .env
+# DB_HOST=mysqldb
+DB_HOST=E7240
+
+    2) Что бы не переключать в .env для миграций и т.д. можно сделать так 
+ПРИМЕР команд    
+DB_HOST=E7240 php artisan migrate
+DB_HOST=E7240 php artisan db:seed --class=CreateSuperUserSeeder
+DB_HOST=E7240 php artisan db:seed --class=PermissionsSeeder
+DB_HOST=E7240 php artisan permission:create-role user
+
+ПРИМЕР команд, которые вводятся без указания DB_HOST=E7240
+php artisan storage:link 
+php artisan breeze:install
+
+php artisan optimize:clear
+php artisan config:clear
+
+php artisan make:seeder CreateSuperUserSeeder
+php artisan make:controller PostController
+php artisan permission:create-role user
+php artisan make:controller RoleController --resource --model=Role
+php artisan make:seeder PermissionsSeeder
+php artisan make:controller UserController --resource --model=User
+
+
+--------------
+в настройках .env вводим данные по базе с файла docker-compose.yml
+--- .env
+DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+DB_HOST=mysqldb # <- контейнер с БД(База Данных)
+# DB_HOST=E7240 # <-это для запуска миграций в контейнере, E7240-хост компьютера 
+DB_PORT=3306
+DB_DATABASE=ale9
+DB_USERNAME=root
+DB_PASSWORD=secret
+
+8.
+создаем файл laravel.log
+в папке laravel10/storage/logs/laravel.log
+
+9.
+
+==============================================================================
+==============================================================================
+
+---
+		Даем разрешения и права доступа на папки и файлы рекурсивно
+sudo chmod 777 -R storage/
+		на запрос - вводим пароль
+sudo chmod 777 -R bootstrap/cache
+
+		Даем права доступа папке mysql-data и файлам по пути laravel10/mysql-data
+sudo chmod -R 777 mysql-data
+	
+	создать символическую ссылку из каталога public/storage на каталог storage/app/public для доступа к файлам, сохраненным в каталоге storage/app/public, через веб-браузер.
+php artisan storage:link 
+
+   INFO  The [public/storage] link has been connected to [storage/app/public]. 
+
+----- 
+DB_HOST=mysqldb
+# DB_HOST=E7240
+
+~/projects/laravel10-migrations-seeders/laravel10$
+DB_HOST=E7240 php artisan make:migration create_posts_table --create=posts
+
+   INFO  Migration [database/migrations/2024_05_27_153457_create_posts_table.php] created successfully.  
+---
+	переключил что бы набирать не так DB_HOST=E7240 php artisan... а так php artisan...
+# DB_HOST=mysqldb
+DB_HOST=E7240
+
+	создается миграция и модель
+php artisan make:model Post -m
+
+   INFO  Model [app/Models/Post.php] created successfully.  
+   INFO  Migration [database/migrations/2024_05_27_163205_create_posts_table.php] created successfully.
+   
+---
+php artisan migrate
+
+   INFO  Preparing database.  
+
+  Creating migration table ................................................................... 58ms DONE
+
+   INFO  Running migrations.  
+
+  2014_10_12_000000_create_users_table ...................................................... 139ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table ....................................... 73ms DONE
+  2019_08_19_000000_create_failed_jobs_table ................................................ 123ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ..................................... 167ms DONE
+  2024_05_27_163205_create_posts_table ....................................................... 65ms DONE
+
+---
+php artisan migrate:rollback
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_163205_create_posts_table ....................................................... 42ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ...................................... 35ms DONE
+  2019_08_19_000000_create_failed_jobs_table ................................................. 52ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table ....................................... 41ms DONE
+  2014_10_12_000000_create_users_table ....................................................... 40ms DONE
+
+---
+
+php artisan migrate
+   
+---
+php artisan make:migration add_img_column_to_posts_table --table=posts
+
+   INFO  Migration [database/migrations/2024_05_27_174426_add_img_column_to_posts_table.php] created successfully.  
+   
+---
+https://laravel.com/docs/10.x/migrations#modifying-columns
+
+ !!! НЕ раб -  c laravel10 не совместима последняя версия --> composer require doctrine/dbal
+
++++ версии 3.8.4, совместима
+	composer require doctrine/dbal:^3.0
+
+Modifying Columns
+https://laravel.com/docs/10.x/migrations#modifying-columns
+
+
+---
+
+aleksandr@E7240:~/projects/laravel10-migrations-seeders/laravel10$ DB_HOST=E7240 php artisan migrate
+
+   INFO  Running migrations.  
+
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 46ms DONE
+
+aleksandr@E7240:~/projects/laravel10-migrations-seeders/laravel10$ DB_HOST=E7240 php artisan migrate:rollback
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 52ms DONE
+
+aleksandr@E7240:~/projects/laravel10-migrations-seeders/laravel10$ php artisan make:migration change_title_length_posts_table --table=posts
+
+   INFO  Migration [database/migrations/2024_05_27_192237_change_title_length_posts_table.php] created successfully.  
+---
+создаем миграцию 
+
+            $table->string('title', 50)->change();
+            
+ php artisan migrate
+
+   INFO  Running migrations.  
+
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 37ms DONE
+  2024_05_27_192237_change_title_length_posts_table .......................................... 50ms DONE
+  
+php artisan migrate:rollback
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_192237_change_title_length_posts_table ......................................... 197ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 38ms DONE
+
+php artisan migrate
+
+   INFO  Running migrations.  
+
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 52ms DONE
+  2024_05_27_192237_change_title_length_posts_table .......................................... 49ms DONE
+
+ php artisan migrate:rollback --step=1
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_192237_change_title_length_posts_table ......................................... 186ms DONE
+	перезапуск миграций
+php artisan migrate:refresh
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 52ms DONE
+  2024_05_27_163205_create_posts_table ....................................................... 47ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ...................................... 39ms DONE
+  2019_08_19_000000_create_failed_jobs_table ................................................. 39ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table ....................................... 35ms DONE
+  2014_10_12_000000_create_users_table ....................................................... 42ms DONE
+
+
+   INFO  Running migrations.  
+
+  2014_10_12_000000_create_users_table ...................................................... 124ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table ...................................... 151ms DONE
+  2019_08_19_000000_create_failed_jobs_table ................................................ 315ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ..................................... 241ms DONE
+  2024_05_27_163205_create_posts_table ....................................................... 67ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 41ms DONE
+  2024_05_27_192237_change_title_length_posts_table .......................................... 62ms DONE
+	удаляет и запускает все с нуля
+php artisan migrate:fresh
+
+  Dropping all tables ....................................................................... 198ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table ................................................................... 54ms DONE
+
+   INFO  Running migrations.  
+
+  2014_10_12_000000_create_users_table ...................................................... 118ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table ....................................... 65ms DONE
+  2019_08_19_000000_create_failed_jobs_table ................................................ 111ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ..................................... 172ms DONE
+  2024_05_27_163205_create_posts_table ....................................................... 57ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ............................................ 39ms DONE
+  2024_05_27_192237_change_title_length_posts_table .......................................... 52ms DONE
+
+--- Faker
+php artisan make:factory PostFactory --model=Post
+
+   INFO  Factory [database/factories/PostFactory.php] created successfully.
+---
+https://github.com/fzaninotto/Faker
+---
+
+---
+================ Отступление ====== 
+сокращаем командную строку 
+  с длинны
+aleksandr@E7240:~/projects/laravel10-migrations-seeders/laravel10$ 
+  до последних 4-х символов
+l10$
+
+  команда работает на время сессии в текущем окне.
+  полная длинна 
+export PS1="\u@\h:\W\$ ")
+
+  подкаталог(laravel10$) 
+export PS1="\W\$ "
+
+  последние 3-и символа+$ l10$
+export PS1='$(basename "$PWD" | rev | cut -c 1-3 | rev)\$ '
+
+Описание:
+1) basename "$PWD": получает имя текущего рабочего каталога.
+2) rev: переворачивает строку (т.е. делает "abc" из "cba").
+3) cut -c 1-3: берет первые три символа перевернутой строки.
+4) rev: снова переворачивает строку, чтобы получить последние три символа исходной строки.
+
+Добавляем цвета 0m 31m-36m  
+
+Сокращение командной строки до последних 3-х символов 
+-- желто-коричневый(33m) -- зеленый(32m) -- белый(0m)
+export PS1="\[\e[33m\]\$(basename \$PWD | rev | cut -c 1-3 | rev)\[\e[32m\]\$\[\e[0m\] "
+export PS1="\[\e[33m\]\$(basename \$PWD | rev | cut -c 1-3 | rev)\[\e[32m\]\$\[\e[0m\] "
+=================
+---
+
+php artisan make:seeder PostSeeder
+
+   INFO  Seeder [database/seeders/PostSeeder.php] created successfully.
+
+	запуск сидера по имени PostSeeder.php
+php artisan db:seed --class=PostSeeder
+
+	запустит главный сидер DatabaseSeeder.php(можно прописать какие запускать -> PostSeeder.php...)
+php artisan db:seed
+
+---
+
+l10$ php artisan make:seeder PostSeeder
+
+   INFO  Seeder [database/seeders/PostSeeder.php] created successfully.  
+
+l10$ php artisan db:seed
+
+   INFO  Seeding database.  
+
+  Database\Seeders\PostSeeder ............................................. RUNNING  
+  Database\Seeders\PostSeeder ......................................... 288 ms DONE  
+
+l10$ 
+
+----- Комплексный подход 
+
+l10$ php artisan make:model Category -mfcs
+Создало Model Factory Migration Seeder Controller
+   INFO  Model [app/Models/Category.php] created successfully.  
+
+   INFO  Factory [database/factories/CategoryFactory.php] created successfully.  
+
+   INFO  Migration [database/migrations/2024_05_27_221546_create_categories_table.php] created successfully.  
+
+   INFO  Seeder [database/seeders/CategorySeeder.php] created successfully.  
+
+   INFO  Controller [app/Http/Controllers/CategoryController.php] created successfully.  
+
+l10$ 
+--- Заполняем
+Factories
+	'name'=>$this->faker->word
+
+seeders 
+	Category::factory()->count(10)->create();
+	
+DatabaseSeeder.php - заполняем какие сидеры запускать
+
+CategoryControlle
+
+Model
+	Category
+
+migrations
+	2024_05_27_221546_create_categories_table.php
+
+---
+l10$ php artisan db:seed
+
+   INFO  Seeding database.  
+
+  Database\Seeders\PostSeeder ............................................. RUNNING  
+  Database\Seeders\PostSeeder ......................................... 287 ms DONE  
+
+  Database\Seeders\CategorySeeder ......................................... RUNNING  
+  Database\Seeders\CategorySeeder ..................................... 120 ms DONE  
+
+l10$ 
+---
+при повторной команде (php artisan db:seed) добавляет столько же посевов постоянно уведичивая в БД
+
+fresh - удаляет и делает сново
+refresh - перезаписует содержимое таблиц
+
+Что бы постоянно не добавляло можно сделать так -> 
+php artisan migrate:refresh --step=4 --seed
+l10$ php artisan migrate:refresh --step=4 --seed
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_221546_create_categories_table ............................. 43ms DONE
+  2024_05_27_192237_change_title_length_posts_table .................... 212ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ....................... 40ms DONE
+  2024_05_27_163205_create_posts_table .................................. 44ms DONE
+
+
+   INFO  Running migrations.  
+
+  2024_05_27_163205_create_posts_table .................................. 76ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ....................... 45ms DONE
+  2024_05_27_192237_change_title_length_posts_table ..................... 38ms DONE
+  2024_05_27_221546_create_categories_table ............................. 92ms DONE
+
+
+   INFO  Seeding database.  
+
+  Database\Seeders\PostSeeder ............................................. RUNNING  
+  Database\Seeders\PostSeeder ......................................... 459 ms DONE  
+
+  Database\Seeders\CategorySeeder ......................................... RUNNING  
+  Database\Seeders\CategorySeeder ..................................... 122 ms DONE  
+
+l10$ 
+--- или так перезапишет таблицы php artisan migrate:refresh --seed
+l10$ php artisan migrate:refresh --seed
+
+   INFO  Rolling back migrations.  
+
+  2024_05_27_221546_create_categories_table ............................. 33ms DONE
+  2024_05_27_192237_change_title_length_posts_table .................... 134ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ....................... 50ms DONE
+  2024_05_27_163205_create_posts_table .................................. 34ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ................. 43ms DONE
+  2019_08_19_000000_create_failed_jobs_table ............................ 48ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table .................. 45ms DONE
+  2014_10_12_000000_create_users_table .................................. 43ms DONE
+
+
+   INFO  Running migrations.  
+
+  2014_10_12_000000_create_users_table .................................. 95ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table .................. 58ms DONE
+  2019_08_19_000000_create_failed_jobs_table ........................... 108ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ................ 307ms DONE
+  2024_05_27_163205_create_posts_table ................................. 147ms DONE
+  2024_05_27_174426_add_img_column_to_posts_table ....................... 91ms DONE
+  2024_05_27_192237_change_title_length_posts_table ..................... 83ms DONE
+  2024_05_27_221546_create_categories_table ............................ 103ms DONE
+
+
+   INFO  Seeding database.  
+
+  Database\Seeders\PostSeeder ............................................. RUNNING  
+  Database\Seeders\PostSeeder ......................................... 215 ms DONE  
+
+  Database\Seeders\CategorySeeder ......................................... RUNNING  
+  Database\Seeders\CategorySeeder ...................................... 97 ms DONE  
+
+l10$ 
